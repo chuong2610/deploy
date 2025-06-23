@@ -15,4 +15,16 @@ services:
       - "5182:80"  # map host:container (5182:80)
     environment:
       - ASPNETCORE_URLS=http://+:80  # ép ASP.NET Core listen cổng 80
+      
+  nginx:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: always
+    ports:
+      - "80:80"       # HTTP
+      - "81:81"       # Giao diện quản lý NPM
+      - "443:443"     # HTTPS
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt    
     
