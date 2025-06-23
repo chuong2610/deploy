@@ -1,0 +1,18 @@
+services:
+  redis:
+    image: redis/redis-stack
+    container_name: redisDeploy
+    ports:
+      - "6379:6379"
+      - "8001:8001" 
+    environment:
+      REDIS_ARGS: --requirepass chuong0105
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5182:80"  # map host:container (5182:80)
+    environment:
+      - ASPNETCORE_URLS=http://+:80  # ép ASP.NET Core listen cổng 80
+    
