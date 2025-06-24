@@ -1,8 +1,9 @@
-name: Deploy .NET Backend to VPS
+name: 🚀 Deploy .NET Backend to VPS (pull vào /root/deploy)
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -15,19 +16,29 @@ jobs:
       - name: 🛠 Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: 🧱 Build .NET backend
+      - name: 🚀 SSH to VPS and deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
-          dotnet restore backend/backend.csproj
-          dotnet publish backend/backend.csproj -c Release -o backend/publish
-
-      - name: 📤 Copy project to VPS
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r backend/publish/* ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/root/deploy
-
-      - name: 🚀 SSH into VPS and deploy
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
+          sshpass -p "$VPS_PASSWORD" ssh -T -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST << 'EOF'
             cd /root/deploy
-            docker compose down
+
+            # Nếu là lần đầu thì clone, nếu có rồi thì pull
+            if [ ! -d .git ]; then
+              git git clone https://github.com/chuong2610/deploy.git .
+            else
+              git fetch origin
+              git reset --hard origin/main
+            fi
+
+            # Dừng container cũ
+            docker compose down || true
+
+            # Xoá image cũ nếu cần
+            docker image prune -f || true
+
+            # Build & chạy container mới
             docker compose up -d --build
           EOF
