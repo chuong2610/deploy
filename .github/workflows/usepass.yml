@@ -1,4 +1,4 @@
-name: 🚀 Deploy .NET Backend to VPS (pull vào /root/deploy)
+name: 🚀 Deploy .NET Backend to VPS
 
 on:
   push:
@@ -18,8 +18,8 @@ jobs:
 
       - name: 🚀 SSH to VPS and deploy
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_IP: ${{ secrets.VPS_IP }}
+          VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           JWT_KEY: ${{ secrets.JWT_KEY }}
@@ -36,44 +36,41 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
         run: |
-          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST 'bash -s' <<EOF
-set -e
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_IP <<EOF
+            set -e
 
-echo "📁 Kiểm tra thư mục /root/deploy"
-if [ ! -d "/root/deploy/.git" ]; then
-  echo "📦 Clone lần đầu"
-  git clone git@github.com:chuong2610/deploy.git /root/deploy
-fi
+            echo "📁 Kiểm tra thư mục /root/deploy"
+            if [ ! -d "/root/deploy/.git" ]; then
+              git clone git@github.com:chuong2610/deploy.git /root/deploy
+            fi
 
-cd /root/deploy
+            cd /root/deploy
+            git fetch origin
+            git reset --hard origin/main
 
-echo "🔄 Pull code mới nhất"
-git fetch origin
-git reset --hard origin/main
+            echo "📝 Ghi vào backend/.env"
+            echo "APP_BASE_URL=$APP_BASE_URL" > backend/.env
+            echo "JWT_KEY=$JWT_KEY" >> backend/.env
+            echo "JWT_ISSUER=$JWT_ISSUER" >> backend/.env
+            echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> backend/.env
+            echo "DB_CONNECTION=$DB_CONNECTION" >> backend/.env
+            echo "REDIS_CONNECTION=$REDIS_CONNECTION" >> backend/.env
+            echo "EMAIL_FROM=$EMAIL_FROM" >> backend/.env
+            echo "EMAIL_USERNAME=$EMAIL_USERNAME" >> backend/.env
+            echo "EMAIL_PASSWORD=$EMAIL_PASSWORD" >> backend/.env
+            echo "EMAIL_PORT=$EMAIL_PORT" >> backend/.env
+            echo "EMAIL_SMTP=$EMAIL_SMTP" >> backend/.env
+            echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> backend/.env
+            echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> backend/.env
 
-echo "📝 Ghi biến môi trường vào file .env"
-echo "APP_BASE_URL=$APP_BASE_URL" > .env
-echo "JWT_KEY=$JWT_KEY" >> .env
-echo "JWT_ISSUER=$JWT_ISSUER" >> .env
-echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> .env
-echo "DB_CONNECTION=$DB_CONNECTION" >> .env
-echo "REDIS_CONNECTION=$REDIS_CONNECTION" >> .env
-echo "EMAIL_FROM=$EMAIL_FROM" >> .env
-echo "EMAIL_USERNAME=$EMAIL_USERNAME" >> .env
-echo "EMAIL_PASSWORD=$EMAIL_PASSWORD" >> .env
-echo "EMAIL_PORT=$EMAIL_PORT" >> .env
-echo "EMAIL_SMTP=$EMAIL_SMTP" >> .env
-echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
-echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> .env
+            echo "♻️ Dừng container cũ nếu có"
+            docker compose down || true
 
-echo "♻️ Dừng container cũ nếu có"
-docker compose down || true
+            echo "🚀 Build và chạy lại container"
+            docker compose up -d --build
 
-echo "🚀 Build và chạy lại container"
-docker compose up -d --build
+            echo "🧹 Xoá image không dùng"
+            docker image prune -f
 
-echo "🧹 Xoá image không dùng"
-docker image prune -f
-
-echo "✅ Hoàn tất triển khai!"
-EOF
+            echo "✅ Triển khai hoàn tất!"
+          EOF
