@@ -22,12 +22,12 @@ jobs:
 
       - name: 📤 Copy project to VPS
         run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r . ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/deploy
+           sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r . ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/root/deploy
 
       - name: 🚀 SSH into VPS and deploy
         run: |
           sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /home/${{ secrets.VPS_USERNAME }}/deploy
+            cd /root/deploy
             docker-compose down
             docker-compose up -d --build
           EOF
