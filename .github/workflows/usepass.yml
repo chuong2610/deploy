@@ -37,21 +37,6 @@ jobs:
 
         run: |
           sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_IP bash -s <<EOF
-            # Export các biến môi trường để sử dụng trong script
-            APP_BASE_URL="${APP_BASE_URL}"
-            JWT_KEY="${JWT_KEY}"
-            JWT_ISSUER="${JWT_ISSUER}"
-            JWT_AUDIENCE="${JWT_AUDIENCE}"
-            DB_CONNECTION="${DB_CONNECTION}"
-            REDIS_CONNECTION="${REDIS_CONNECTION}"
-            EMAIL_FROM="${EMAIL_FROM}"
-            EMAIL_USERNAME="${EMAIL_USERNAME}"
-            EMAIL_PASSWORD="${EMAIL_PASSWORD}"
-            EMAIL_PORT="${EMAIL_PORT}"
-            EMAIL_SMTP="${EMAIL_SMTP}"
-            GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
-            GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
-
             set -e
 
             echo "📁 Kiểm tra thư mục /root/deploy"
@@ -64,19 +49,19 @@ jobs:
             git reset --hard origin/main
 
             echo "📝 Ghi vào backend/.env"
-            echo "APP_BASE_URL=\$APP_BASE_URL" > backend/.env
-            echo "JWT_KEY=\$JWT_KEY" >> backend/.env
-            echo "JWT_ISSUER=\$JWT_ISSUER" >> backend/.env
-            echo "JWT_AUDIENCE=\$JWT_AUDIENCE" >> backend/.env
-            echo "DB_CONNECTION=\$DB_CONNECTION" >> backend/.env
-            echo "REDIS_CONNECTION=\$REDIS_CONNECTION" >> backend/.env
-            echo "EMAIL_FROM=\$EMAIL_FROM" >> backend/.env
-            echo "EMAIL_USERNAME=\$EMAIL_USERNAME" >> backend/.env
-            echo "EMAIL_PASSWORD=\$EMAIL_PASSWORD" >> backend/.env
-            echo "EMAIL_PORT=\$EMAIL_PORT" >> backend/.env
-            echo "EMAIL_SMTP=\$EMAIL_SMTP" >> backend/.env
-            echo "GOOGLE_CLIENT_ID=\$GOOGLE_CLIENT_ID" >> backend/.env
-            echo "GOOGLE_CLIENT_SECRET=\$GOOGLE_CLIENT_SECRET" >> backend/.env
+            echo "APP_BASE_URL=$APP_BASE_URL" > backend/.env
+            echo "JWT_KEY=$JWT_KEY" >> backend/.env
+            echo "JWT_ISSUER=$JWT_ISSUER" >> backend/.env
+            echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> backend/.env
+            echo "DB_CONNECTION=$DB_CONNECTION" >> backend/.env
+            echo "REDIS_CONNECTION=$REDIS_CONNECTION" >> backend/.env
+            echo "EMAIL_FROM=$EMAIL_FROM" >> backend/.env
+            echo "EMAIL_USERNAME=$EMAIL_USERNAME" >> backend/.env
+            echo "EMAIL_PASSWORD=$EMAIL_PASSWORD" >> backend/.env
+            echo "EMAIL_PORT=$EMAIL_PORT" >> backend/.env
+            echo "EMAIL_SMTP=$EMAIL_SMTP" >> backend/.env
+            echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> backend/.env
+            echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> backend/.env
 
             echo "♻️ Dừng container cũ nếu có"
             docker compose down || true
