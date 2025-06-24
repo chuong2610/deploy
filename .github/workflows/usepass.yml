@@ -21,24 +21,56 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
-        run: |
-          sshpass -p "$VPS_PASSWORD" ssh -T -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST << 'EOF'
-            cd /root/deploy
 
-            # Nếu là lần đầu thì clone, nếu có rồi thì pull
-            if [ ! -d .git ]; then
-              git git clone https://github.com/chuong2610/deploy.git .
-            else
-              git fetch origin
-              git reset --hard origin/main
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          REDIS_CONNECTION: ${{ secrets.REDIS_CONNECTION }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_SMTP: ${{ secrets.EMAIL_SMTP }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+        run: |
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST <<EOF
+            set -e
+
+            echo "📁 Tới thư mục /root/deploy"
+            if [ ! -d "/root/deploy/.git" ]; then
+              echo "🆕 Clone repository lần đầu"
+              git clone https://github.com/chuong2610/deploy.git /root/deploy
             fi
 
-            # Dừng container cũ
+            cd /root/deploy
+            echo "🔄 Pull code mới nhất"
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "📝 Ghi file .env từ GitHub Secrets"
+            echo "APP_BASE_URL='${APP_BASE_URL}'" > .env
+            echo "JWT_KEY='${JWT_KEY}'" >> .env
+            echo "JWT_ISSUER='${JWT_ISSUER}'" >> .env
+            echo "JWT_AUDIENCE='${JWT_AUDIENCE}'" >> .env
+            echo "DB_CONNECTION='${DB_CONNECTION}'" >> .env
+            echo "REDIS_CONNECTION='${REDIS_CONNECTION}'" >> .env
+            echo "EMAIL_FROM='${EMAIL_FROM}'" >> .env
+            echo "EMAIL_USERNAME='${EMAIL_USERNAME}'" >> .env
+            echo "EMAIL_PASSWORD='${EMAIL_PASSWORD}'" >> .env
+            echo "EMAIL_PORT='${EMAIL_PORT}'" >> .env
+            echo "EMAIL_SMTP='${EMAIL_SMTP}'" >> .env
+            echo "GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}'" >> .env
+            echo "GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}'" >> .env
+
+            echo "🧹 Dừng container cũ nếu có"
             docker compose down || true
 
-            # Xoá image cũ nếu cần
-            docker image prune -f || true
-
-            # Build & chạy container mới
+            echo "🚀 Build & chạy lại container"
             docker compose up -d --build
+
+            echo "✅ Deploy thành công!"
           EOF
