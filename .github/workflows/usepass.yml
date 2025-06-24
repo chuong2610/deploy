@@ -22,7 +22,7 @@ jobs:
 
       - name: 📤 Copy project to VPS
         run: |
-           sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r . ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/root/deploy
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r backend/publish/* ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/root/deploy
 
       - name: 🚀 SSH into VPS and deploy
         run: |
