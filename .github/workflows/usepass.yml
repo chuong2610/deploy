@@ -42,6 +42,7 @@ jobs:
             echo "📁 Kiểm tra thư mục /root/deploy"
             if [ ! -d "/root/deploy/.git" ]; then
               echo "📦 Clone lần đầu"
+              git config --global credential.helper ""
               git clone https://github.com/chuong2610/deploy.git /root/deploy
             fi
 
@@ -49,6 +50,7 @@ jobs:
             cd /root/deploy
 
             echo "🔄 Pull code mới nhất"
+            git config --global credential.helper ""
             git fetch origin
             git reset --hard origin/main
 
