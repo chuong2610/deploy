@@ -1,8 +1,9 @@
-name: Deploy .NET Backend to VPS
+name: 🚀 Deploy .NET Backend to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -15,19 +16,61 @@ jobs:
       - name: 🛠 Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: 🧱 Build .NET backend
-        run: |
-          dotnet restore deploy/backend/SchoolHealth.csproj
-          dotnet publish deploy/backend/SchoolHealth.csproj -c Release -o deploy/backend/publish
+      - name: 🚀 SSH to VPS and deploy
+        env:
+          VPS_IP: ${{ secrets.VPS_IP }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          REDIS_CONNECTION: ${{ secrets.REDIS_CONNECTION }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_SMTP: ${{ secrets.EMAIL_SMTP }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
-      - name: 📤 Copy deploy folder to VPS via SCP
         run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r deploy ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/deploy
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_IP <<EOF
+            set -e
 
-      - name: 🚀 SSH into VPS and deploy
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /home/${{ secrets.VPS_USERNAME }}/deploy
-            docker-compose down
-            docker-compose up -d --build
+            echo "📁 Kiểm tra thư mục /root/deploy"
+            if [ ! -d "/root/deploy/.git" ]; then
+              git clone git@github.com:chuong2610/deploy.git /root/deploy
+            fi
+
+            cd /root/deploy
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "📝 Ghi vào backend/.env"
+            echo "APP_BASE_URL=$APP_BASE_URL" > backend/.env
+            echo "JWT_KEY=$JWT_KEY" >> backend/.env
+            echo "JWT_ISSUER=$JWT_ISSUER" >> backend/.env
+            echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> backend/.env
+            echo "DB_CONNECTION=$DB_CONNECTION" >> backend/.env
+            echo "REDIS_CONNECTION=$REDIS_CONNECTION" >> backend/.env
+            echo "EMAIL_FROM=$EMAIL_FROM" >> backend/.env
+            echo "EMAIL_USERNAME=$EMAIL_USERNAME" >> backend/.env
+            echo "EMAIL_PASSWORD=$EMAIL_PASSWORD" >> backend/.env
+            echo "EMAIL_PORT=$EMAIL_PORT" >> backend/.env
+            echo "EMAIL_SMTP=$EMAIL_SMTP" >> backend/.env
+            echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> backend/.env
+            echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> backend/.env
+
+            echo "♻️ Dừng container cũ nếu có"
+            docker compose down || true
+
+            echo "🚀 Build và chạy lại container"
+            docker compose up -d --build
+
+            echo "🧹 Xoá image không dùng"
+            docker image prune -f
+
+            echo "✅ Triển khai hoàn tất!"
           EOF
