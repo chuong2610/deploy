@@ -17,7 +17,7 @@ jobs:
 
       - name: 🧱 Build .NET backend
         run: |
-          dotnet restore deploy/backend/SchoolHealth.csproj
+          dotnet restore deploy/backend/backend.csproj
           dotnet publish deploy/backend/backend.csproj -c Release -o deploy/backend/publish
 
       - name: 📤 Copy deploy folder to VPS via SCP
