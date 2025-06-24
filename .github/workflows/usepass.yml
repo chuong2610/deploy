@@ -16,7 +16,7 @@ jobs:
       - name: 🛠 Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: 🚀 SSH to VPS and deploy
+      - name: 🚀 Deploy .NET Backend to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
@@ -37,40 +37,43 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
         run: |
-          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST <<EOF
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST 'bash -s' <<'EOF'
             set -e
 
-            echo "📁 Tới thư mục /root/deploy"
+            echo "📁 Kiểm tra /root/deploy"
             if [ ! -d "/root/deploy/.git" ]; then
-              echo "🆕 Clone repository lần đầu"
+              echo "📦 Clone lần đầu"
               git clone https://github.com/chuong2610/deploy.git /root/deploy
             fi
 
             cd /root/deploy
+
             echo "🔄 Pull code mới nhất"
             git fetch origin
             git reset --hard origin/main
 
-            echo "📝 Ghi file .env từ GitHub Secrets"
-            echo "APP_BASE_URL='${APP_BASE_URL}'" > .env
-            echo "JWT_KEY='${JWT_KEY}'" >> .env
-            echo "JWT_ISSUER='${JWT_ISSUER}'" >> .env
-            echo "JWT_AUDIENCE='${JWT_AUDIENCE}'" >> .env
-            echo "DB_CONNECTION='${DB_CONNECTION}'" >> .env
-            echo "REDIS_CONNECTION='${REDIS_CONNECTION}'" >> .env
-            echo "EMAIL_FROM='${EMAIL_FROM}'" >> .env
-            echo "EMAIL_USERNAME='${EMAIL_USERNAME}'" >> .env
-            echo "EMAIL_PASSWORD='${EMAIL_PASSWORD}'" >> .env
-            echo "EMAIL_PORT='${EMAIL_PORT}'" >> .env
-            echo "EMAIL_SMTP='${EMAIL_SMTP}'" >> .env
-            echo "GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}'" >> .env
-            echo "GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}'" >> .env
+            echo "📝 Tạo file .env"
+            cat > .env <<EOT
+APP_BASE_URL=$APP_BASE_URL
+JWT_KEY=$JWT_KEY
+JWT_ISSUER=$JWT_ISSUER
+JWT_AUDIENCE=$JWT_AUDIENCE
+DB_CONNECTION=$DB_CONNECTION
+REDIS_CONNECTION=$REDIS_CONNECTION
+EMAIL_FROM=$EMAIL_FROM
+EMAIL_USERNAME=$EMAIL_USERNAME
+EMAIL_PASSWORD=$EMAIL_PASSWORD
+EMAIL_PORT=$EMAIL_PORT
+EMAIL_SMTP=$EMAIL_SMTP
+GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+EOT
 
-            echo "🧹 Dừng container cũ nếu có"
+            echo "🧹 Dừng container cũ (nếu có)"
             docker compose down || true
 
-            echo "🚀 Build & chạy lại container"
+            echo "🚀 Build và chạy lại container"
             docker compose up -d --build
 
-            echo "✅ Deploy thành công!"
+            echo "✅ Triển khai thành công!"
           EOF
