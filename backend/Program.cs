@@ -23,7 +23,7 @@ using Backend.Settings;
 
 
 var builder = WebApplication.CreateBuilder(args);
-DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), "backend", ".env"));
+DotNetEnv.Env.Load();
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddEnvironmentVariables(); // Quan trọng!
