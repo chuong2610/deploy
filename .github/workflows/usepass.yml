@@ -1,0 +1,33 @@
+name: Deploy .NET Backend to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🛠 Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: 🧱 Build .NET backend
+        run: |
+          dotnet restore deploy/backend/SchoolHealth.csproj
+          dotnet publish deploy/backend/SchoolHealth.csproj -c Release -o deploy/backend/publish
+
+      - name: 📤 Copy deploy folder to VPS via SCP
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r deploy ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/deploy
+
+      - name: 🚀 SSH into VPS and deploy
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /home/${{ secrets.VPS_USERNAME }}/deploy
+            docker-compose down
+            docker-compose up -d --build
+          EOF
