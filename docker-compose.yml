@@ -12,9 +12,9 @@ services:
     build:
       context: ./backend
     ports:
-      - "5182:80"  # map host:container (5182:80)
+      - "5182:5182"  # map host:container (host 5182 → container 5182)
     environment:
-      - ASPNETCORE_URLS=http://+:80  # ép ASP.NET Core listen cổng 80
+      - ASPNETCORE_URLS=http://+:5182
       
   nginx:
     image: jc21/nginx-proxy-manager:latest
