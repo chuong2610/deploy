@@ -17,12 +17,12 @@ jobs:
 
       - name: 🧱 Build .NET backend
         run: |
-          dotnet restore deploy/backend/backend.csproj
-          dotnet publish deploy/backend/backend.csproj -c Release -o deploy/backend/publish
+          dotnet restore backend/backend.csproj
+          dotnet publish backend/backend.csproj -c Release -o backend/publish
 
-      - name: 📤 Copy deploy folder to VPS via SCP
+      - name: 📤 Copy project to VPS
         run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r deploy ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/deploy
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r . ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USERNAME }}/deploy
 
       - name: 🚀 SSH into VPS and deploy
         run: |
