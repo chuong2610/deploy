@@ -36,13 +36,13 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
         run: |
-          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST << 'EOF'
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST <<EOF
             set -e
 
             echo "📁 Kiểm tra thư mục /root/deploy"
             if [ ! -d "/root/deploy/.git" ]; then
               echo "📦 Clone lần đầu"
-              git clone https://github.com/chuong2610/deploy.git /root/deploy
+              git clone git@github.com:chuong2610/deploy.git /root/deploy
             fi
 
             echo "📁 Di chuyển vào thư mục deploy"
@@ -52,22 +52,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            echo "🌍 Export biến môi trường"
-            export APP_BASE_URL="${APP_BASE_URL}"
-            export JWT_KEY="${JWT_KEY}"
-            export JWT_ISSUER="${JWT_ISSUER}"
-            export JWT_AUDIENCE="${JWT_AUDIENCE}"
-            export DB_CONNECTION="${DB_CONNECTION}"
-            export REDIS_CONNECTION="${REDIS_CONNECTION}"
-            export EMAIL_FROM="${EMAIL_FROM}"
-            export EMAIL_USERNAME="${EMAIL_USERNAME}"
-            export EMAIL_PASSWORD="${EMAIL_PASSWORD}"
-            export EMAIL_PORT="${EMAIL_PORT}"
-            export EMAIL_SMTP="${EMAIL_SMTP}"
-            export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
-            export GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
-
-            echo "📝 Tạo file .env"
+            echo "📝 Ghi biến môi trường vào file .env"
             echo "APP_BASE_URL=$APP_BASE_URL" > .env
             echo "JWT_KEY=$JWT_KEY" >> .env
             echo "JWT_ISSUER=$JWT_ISSUER" >> .env
@@ -92,4 +77,4 @@ jobs:
             docker image prune -f
 
             echo "✅ Hoàn tất triển khai!"
-          EOF
+EOF
