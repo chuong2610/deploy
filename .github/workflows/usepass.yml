@@ -1,4 +1,4 @@
-name: 🚀 Deploy .NET Backend to VPS Docker
+name: 🚀 Deploy .NET Backend to VPS (pull vào /root/deploy)
 
 on:
   push:
@@ -16,39 +16,66 @@ jobs:
       - name: 🛠 Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: 🚀 Deploy to VPS
+      - name: 🚀 SSH to VPS and deploy
         env:
-          VPS_IP: ${{ secrets.VPS_IP }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          PASS: ${{ secrets.PASS }}
-          # Không cần khai báo các biến khác nếu đã dùng trong Docker Compose
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION }}
+          REDIS_CONNECTION: ${{ secrets.REDIS_CONNECTION }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_SMTP: ${{ secrets.EMAIL_SMTP }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
         run: |
-          sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_IP /bin/bash << 'EOSSH'
-          set -euo pipefail
+          sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USERNAME@$VPS_HOST 'bash -s' <<EOF
+            set -e
 
-          DEPLOY_DIR="/root/deploy"
-          REPO_URL="https://github.com/chuong2610/deploy.git"
+            echo "📁 Kiểm tra thư mục /root/deploy"
+            if [ ! -d "/root/deploy/.git" ]; then
+              echo "📦 Clone lần đầu"
+              git clone https://github.com/chuong2610/deploy.git /root/deploy
+            fi
 
-          echo "📁 Kiểm tra thư mục deploy..."
-          if [ ! -d "$DEPLOY_DIR/.git" ]; then
-            echo "📦 Clone repo lần đầu..."
-            git clone "$REPO_URL" "$DEPLOY_DIR"
-          fi
+            echo "📁 Tới thư mục /root/deploy"
+            cd /root/deploy
 
-          cd "$DEPLOY_DIR"
-          echo "🔄 Kéo code mới nhất..."
-          git fetch
-          git reset --hard origin/main
-
-          echo "🧹 Dừng container cũ..."
-          docker compose down || true
-
-          echo "🚀 Khởi động lại container..."
-          docker compose up -d --build
-
-          echo "🧹 Dọn dẹp Docker cache..."
-          docker image prune -af
-
-          echo "✅ Triển khai thành công!"
-          EOSSH
+            echo "🔄 Pull code mới nhất"
+            git fetch origin
+            git reset --hard origin/main
+            
+            echo "🌍 Export biến môi trường từ GitHub Secrets"
+              export APP_BASE_URL="${APP_BASE_URL}"
+              export JWT_KEY="${JWT_KEY}"
+              export JWT_ISSUER="${JWT_ISSUER}"
+              export JWT_AUDIENCE="${JWT_AUDIENCE}"
+              export DB_CONNECTION="${DB_CONNECTION}"
+              export REDIS_CONNECTION="${REDIS_CONNECTION}"
+              export EMAIL_FROM="${EMAIL_FROM}"
+              export EMAIL_USERNAME="${EMAIL_USERNAME}"
+              export EMAIL_PASSWORD="${EMAIL_PASSWORD}"
+              export EMAIL_PORT="${EMAIL_PORT}"
+              export EMAIL_SMTP="${EMAIL_SMTP}"
+              export GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
+              export GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
+        
+              echo "♻️ Dừng container cũ nếu có"
+              docker compose down || true
+        
+              echo "🚀 Build & chạy lại container"
+              docker compose up -d --build
+        
+              echo "🧹 Dọn image không dùng"
+              docker image prune -f
+        
+              echo "✅ Hoàn tất triển khai!"
+            EOF
