@@ -49,7 +49,8 @@ jobs:
             git reset --hard origin/main
 
             echo "📝 Ghi vào backend/.env"
-            echo "APP_BASE_URL=$APP_BASE_URL" >> /root/deploy/backend/.env
+            rm -f /root/deploy/backend/.env
+            echo "APP_BASE_URL=$APP_BASE_URL" > /root/deploy/backend/.env
             echo "JWT_KEY=$JWT_KEY" >> /root/deploy/backend/.env
             echo "JWT_ISSUER=$JWT_ISSUER" >> /root/deploy/backend/.env
             echo "JWT_AUDIENCE=$JWT_AUDIENCE" >> /root/deploy/backend/.env
