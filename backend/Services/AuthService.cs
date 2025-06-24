@@ -6,6 +6,8 @@ using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTO;
 using backend.Models.Request;
+using Backend.Settings;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Services
@@ -17,9 +19,20 @@ namespace backend.Services
         private readonly IRedisService _redisService;
         private readonly IEmailService _emailService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly JwtSettings _jwtSettings;
+        private readonly GoogleSettings _googleSettings;
 
-        public AuthService(IConfiguration configuration, IUserRepository userRepository, IRedisService redisService, IEmailService emailService, IHttpClientFactory httpClientFactory)
+        public AuthService(
+            IOptions<JwtSettings> jwtSettings,
+            IOptions<GoogleSettings> googleSettings, // 👈 thêm cái này
+            IConfiguration configuration,
+            IUserRepository userRepository,
+            IRedisService redisService,
+            IEmailService emailService,
+            IHttpClientFactory httpClientFactory)
         {
+            _jwtSettings = jwtSettings.Value;
+            _googleSettings = googleSettings.Value; // 👈 lưu lại
             _configuration = configuration;
             _userRepository = userRepository;
             _redisService = redisService;
@@ -29,21 +42,22 @@ namespace backend.Services
 
         private string GenerateToken(User user)
         {
-            var securityKey = _configuration["Jwt:Key"];
-            var formatKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey));
+            var formatKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var credentials = new SigningCredentials(formatKey, SecurityAlgorithms.HmacSha256);
-            var clamims = new[]{
+            var claims = new[]{
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.Name)
-           };
+            };
+
             var token = new JwtSecurityToken(
-                 issuer: _configuration["Jwt:Issuer"],
-                 audience: _configuration["Jwt:Audience"],
-                 claims: clamims,
-                 expires: DateTime.Now.AddMinutes(30),
-                 signingCredentials: credentials
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: credentials
             );
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -136,13 +150,13 @@ namespace backend.Services
         {
             var client = _httpClientFactory.CreateClient();
             var values = new Dictionary<string, string>
-        {
-            { "code", request.Code },
-            { "client_id", _configuration["Google:ClientId"] },
-            { "client_secret", _configuration["Google:ClientSecret"] },
-            { "redirect_uri", request.RedirectUri },
-            { "grant_type", "authorization_code" }
-        };
+            {
+                { "code", request.Code },
+                { "client_id", _googleSettings.ClientId },       // 👈 dùng từ IOptions
+                { "client_secret", _googleSettings.ClientSecret }, // 👈 dùng từ IOptions
+                { "redirect_uri", request.RedirectUri },
+                { "grant_type", "authorization_code" }
+            };
             var response = await client.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(values));
             // var errorJson = await response.Content.ReadAsStringAsync();
             // Console.WriteLine("Google Token Error Response: " + errorJson);

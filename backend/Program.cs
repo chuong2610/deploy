@@ -18,10 +18,52 @@ using backend.Infrastructure;
 using System.Net.WebSockets;
 using backend.Hubs;
 using StackExchange.Redis;
+using Backend.Settings;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
+DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env")); 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables(); // Quan trọng!
+
+var connStr = Environment.GetEnvironmentVariable("DB_CONNECTION");
+var redisStr = Environment.GetEnvironmentVariable("REDIS_CONNECTION");
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connStr));
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = ConfigurationOptions.Parse(redisStr);
+    config.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(config);
+});
+
+builder.Services.Configure<JwtSettings>(options =>
+{
+    options.Key = Environment.GetEnvironmentVariable("JWT_KEY");
+    options.Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+    options.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+});
+
+// Google
+builder.Services.Configure<GoogleSettings>(options =>
+{
+    options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+    options.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
+});
+
+// Email
+builder.Services.Configure<EmailSettings>(options =>
+{
+    options.From = Environment.GetEnvironmentVariable("EMAIL_FROM");
+    options.SmtpServer = Environment.GetEnvironmentVariable("EMAIL_SMTP");
+    options.Port = int.Parse(Environment.GetEnvironmentVariable("EMAIL_PORT") ?? "587");
+    options.Username = Environment.GetEnvironmentVariable("EMAIL_USERNAME");
+    options.Password = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+});
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -39,9 +81,13 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.OperationFilter<AuthorizeCheckOperationFilter>();
 });
-
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+var jwtSettings = new JwtSettings
+{
+    Key = Environment.GetEnvironmentVariable("JWT_KEY"),
+    Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+    Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+};
+var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -57,7 +103,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
+        ValidIssuer = jwtSettings.Issuer,
         ValidateAudience = true,
         ValidAudience = "http://localhost:5182"
     };
@@ -144,8 +190,8 @@ builder.Services.AddCors(options =>
 //     options.CallbackPath = "/signin-google";
 // });
 // builder.Services.AddSingleton<backend.Infrastructure.WebSocketManager>();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.Configure<FileUploadSettings>(
 builder.Configuration.GetSection("FileUploadSettings"));
 builder.Services.AddSingleton(resolver =>
@@ -188,13 +234,6 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRedisService, RedisService>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IChatService, ChatService>();
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var configString = builder.Configuration.GetConnectionString("Redis");
-    var config = ConfigurationOptions.Parse(configString);
-    config.AbortOnConnectFail = false;
-    return ConnectionMultiplexer.Connect(config);
-});
 builder.Services.AddSignalR();
 
 
@@ -250,9 +289,7 @@ app.UseCors("AllowFrontend"); // 👈 Áp dụng policy đã khai báo ở trên
 
 
 // app.UseHttpsRedirection();
-
-app.UseCookiePolicy();            // 👈 Phải có để xử lý SameSite
-app.UseCors();                    // 👈 Bật CORS
+          // 👈 Phải có để xử lý SameSite                   
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
