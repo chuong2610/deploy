@@ -9,7 +9,7 @@ namespace backend.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return Content("Xin chào tất cả ", "text/plain");
+            return Content("Xin chào tất  ", "text/plain");
         }
     }
 }
