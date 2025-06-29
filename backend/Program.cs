@@ -93,6 +93,7 @@ var jwtSettings = new JwtSettings
     Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 };
 var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
+Console.WriteLine("JWT_KEY = " + Environment.GetEnvironmentVariable("JWT_KEY"));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;      // Cho API
