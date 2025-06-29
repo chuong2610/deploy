@@ -100,8 +100,8 @@ namespace backend.Services
                 UserId = c.User.Id,
                 UserName = c.User.Name,
                 UserImage = string.IsNullOrEmpty(c.User.ImageUrl)
-                    ? "http://localhost:5182/uploads/default.png"
-                    : "http://localhost:5182/uploads/" + c.User.ImageUrl,
+                    ? "https://chuong.tichluyvang.com/uploads/default.png"
+                    : "https://chuong.tichluyvang.com/uploads/" + c.User.ImageUrl,
                 LastMessage = c.LastMessage?.Message,
                 Timestamp = c.LastMessage?.Timestamp ?? DateTime.MinValue,
                 HasUnread = unreadFromUsers.Contains(c.User.Id)

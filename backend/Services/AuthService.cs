@@ -6,6 +6,8 @@ using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTO;
 using backend.Models.Request;
+using Backend.Settings;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace backend.Services
@@ -17,19 +19,23 @@ namespace backend.Services
         private readonly IRedisService _redisService;
         private readonly IEmailService _emailService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly JwtSettings _jwtSettings;
+        private readonly GoogleSettings _googleSettings;
 
-        public AuthService(IConfiguration configuration, IUserRepository userRepository, IRedisService redisService, IEmailService emailService, IHttpClientFactory httpClientFactory)
+        public AuthService(IConfiguration configuration, IUserRepository userRepository, IRedisService redisService, IEmailService emailService, IHttpClientFactory httpClientFactory, IOptions<JwtSettings> jwtOptions, IOptions<GoogleSettings> googleOptions)
         {
             _configuration = configuration;
             _userRepository = userRepository;
             _redisService = redisService;
             _emailService = emailService;
             _httpClientFactory = httpClientFactory;
+            _jwtSettings = jwtOptions.Value;
+            _googleSettings = googleOptions.Value;
         }
 
         private string GenerateToken(User user)
         {
-            var securityKey = _configuration["Jwt:Key"];
+            var securityKey = _jwtSettings.Key;
             var formatKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey));
             var credentials = new SigningCredentials(formatKey, SecurityAlgorithms.HmacSha256);
             var clamims = new[]{
@@ -138,12 +144,12 @@ namespace backend.Services
             var client = _httpClientFactory.CreateClient();
             var values = new Dictionary<string, string>
         {
-            { "code", request.Code },
-            { "client_id", _configuration["Google:ClientId"] },
-            { "client_secret", _configuration["Google:ClientSecret"] },
-            { "redirect_uri", request.RedirectUri },
-            { "grant_type", "authorization_code" }
-        };
+                { "code", request.Code },
+                { "client_id", _googleSettings.ClientId },       // 👈 dùng từ IOptions
+                { "client_secret", _googleSettings.ClientSecret }, // 👈 dùng từ IOptions
+                { "redirect_uri", request.RedirectUri },
+                { "grant_type", "authorization_code" }
+            };
             var response = await client.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(values));
             // var errorJson = await response.Content.ReadAsStringAsync();
             // Console.WriteLine("Google Token Error Response: " + errorJson);
