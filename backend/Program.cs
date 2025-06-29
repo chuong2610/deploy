@@ -109,7 +109,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidIssuer = jwtSettings.Issuer,
         ValidateAudience = true,
-        ValidAudience = "http://localhost:5182"
+        ValidAudience = jwtSettings.Audience,
     };
     options.Events = new JwtBearerEvents
     {
@@ -181,7 +181,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000") // 👈 Đúng với React dev server
+            .WithOrigins("https://school-health-fe-five.vercel.app") // 👈 Đúng với React dev server
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials(); // 👈 Chỉ cần nếu dùng cookie
@@ -210,8 +210,8 @@ builder.Services.AddCors(options =>
 //     options.CallbackPath = "/signin-google";
 // });
 // builder.Services.AddSingleton<backend.Infrastructure.WebSocketManager>();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.Configure<FileUploadSettings>(
 builder.Configuration.GetSection("FileUploadSettings"));
 builder.Services.AddSingleton(resolver =>
