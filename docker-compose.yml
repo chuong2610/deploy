@@ -10,4 +10,5 @@ services:
     env_file:
       - ./backend/.env  
     restart: always  # 👉 auto start when server restarts
+    mem_limit: 512m
 
