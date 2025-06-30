@@ -120,7 +120,7 @@ builder.Services.AddAuthentication(options =>
             var accessToken = context.Request.Query["access_token"];
             var path = context.HttpContext.Request.Path;
 
-            // 👇 Kiểm tra endpoint là SignalR hub
+ 
             if (!string.IsNullOrEmpty(accessToken) &&
                 (path.StartsWithSegments("/chatHub") || path.StartsWithSegments("/notificationHub")))
             {
