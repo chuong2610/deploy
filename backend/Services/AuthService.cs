@@ -35,22 +35,22 @@ namespace backend.Services
 
         private string GenerateToken(User user)
         {
-            var securityKey = _jwtSettings.Key;
-            var formatKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKey));
+            var formatKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var credentials = new SigningCredentials(formatKey, SecurityAlgorithms.HmacSha256);
-            var clamims = new[]{
+            var claims = new[]{
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.Name),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-           };
+                new Claim(ClaimTypes.Role, user.Role.Name)
+            };
+
             var token = new JwtSecurityToken(
-                 issuer: _configuration["Jwt:Issuer"],
-                 audience: _configuration["Jwt:Audience"],
-                 claims: clamims,
-                 expires: DateTime.Now.AddMinutes(1000),
-                 signingCredentials: credentials
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: credentials
             );
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
