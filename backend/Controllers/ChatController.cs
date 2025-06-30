@@ -65,8 +65,15 @@ namespace backend.Controllers
         [Authorize]
         public async Task<IActionResult> AssignMessage([FromBody] AssignNurseRequest model)
         {
-            await _chatService.UpdateUnassignedMessagesAsync(model.ParentId, model.NurseId);
-            return Ok();
+            try
+            {
+                await _chatService.UpdateUnassignedMessagesAsync(model.ParentId, model.NurseId);
+                return Ok(new { message = "Message assigned successfully" , success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message , success = false });
+            }
         }
         [HttpGet("requests")]
         [Authorize]
