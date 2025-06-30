@@ -11,6 +11,7 @@ namespace backend.Hubs
             var userId = Context.UserIdentifier;
             var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
             
+            Console.WriteLine($"User {userId} ({userRole}) connected to ChatHub");
 
             // Add nurses to Nurses group for unassigned message broadcasting
             if (userRole == "Nurse")
