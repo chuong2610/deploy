@@ -97,8 +97,8 @@ Console.WriteLine("JWT_KEY = " + Environment.GetEnvironmentVariable("JWT_KEY"));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;      // Cho API
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;            // Khi người dùng login
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; // Cho Google OAuth
+    // options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;            // Khi người dùng login
+    // options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; // Cho Google OAuth
 }).AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
@@ -111,6 +111,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidateAudience = true,
         ValidAudience = jwtSettings.Audience,
+        NameClaimType = ClaimTypes.NameIdentifier
     };
     options.Events = new JwtBearerEvents
     {
