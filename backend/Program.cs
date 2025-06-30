@@ -182,7 +182,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://school-health-fe-five.vercel.app") // 👈 Đúng với React dev server
+            .WithOrigins(Environment.GetEnvironmentVariable("FRONTEND_URL")) // 👈 Đúng với React dev server
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials(); // 👈 Chỉ cần nếu dùng cookie

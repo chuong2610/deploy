@@ -38,6 +38,7 @@ jobs:
           EMAIL_SMTP: ${{ secrets.EMAIL_SMTP }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
 
         run: |
           ssh $VPS_USER@$VPS_IP <<EOF
@@ -67,6 +68,7 @@ jobs:
             echo "EMAIL_SMTP=$EMAIL_SMTP" >> /root/deploy/backend/.env
             echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> /root/deploy/backend/.env
             echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> /root/deploy/backend/.env
+            echo "FRONTEND_URL=$FRONTEND_URL" >> /root/deploy/backend/.env
 
             echo "♻️ Dừng container cũ nếu có"
             docker compose down || true
