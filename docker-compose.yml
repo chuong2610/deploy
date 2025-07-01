@@ -1,5 +1,4 @@
 services:
-
   backend:
     build:
       context: ./backend
@@ -9,6 +8,12 @@ services:
       - ASPNETCORE_URLS=http://+:5182
     env_file:
       - ./backend/.env  
-    restart: always  # 👉 auto start when server restarts
+    restart: always
     mem_limit: 512m
+    networks:
+      - host-bridge
 
+networks:
+  host-bridge:
+    external: true
+    name: bridge  # 👈 sử dụng đúng tên network mặc định của Docker

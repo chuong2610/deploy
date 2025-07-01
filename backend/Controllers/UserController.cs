@@ -174,7 +174,6 @@ namespace backend.Controllers
         }
 
         [HttpPost("update-password")]
-        [Authorize]
         public async Task<IActionResult> UpdatePassword([FromBody] LoginRequest request)
         {
             if (!ModelState.IsValid)

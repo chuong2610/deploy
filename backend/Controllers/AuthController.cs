@@ -30,7 +30,7 @@ namespace backend.Controllers
 
                 if (authDTO == null)
                 {
-                    return Unauthorized(new BaseResponse<string>(null, "Invalid email or password", false));
+                    return Unauthorized(new BaseResponse<string>(null, "Số điện thoại hoặc mật khẩu không đúng", false));
                 }
 
                 return Ok(new BaseResponse<object>(
