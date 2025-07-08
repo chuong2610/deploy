@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace backend.Hubs
 {
+    [Authorize]
     public class ChatHub : Hub
     {
         public override async Task OnConnectedAsync()
