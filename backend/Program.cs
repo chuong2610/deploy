@@ -259,6 +259,7 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IOtherCheckRepository, OtherCheckRepository>();
 builder.Services.AddScoped<IOtherCheckService, OtherCheckService>();
 builder.Services.AddScoped<IConsultationAppointmentRepository, ConsultationAppointmentRepository>();
+builder.Services.AddScoped<IConsultationAppointmentService, ConsultationAppointmentService>();
 // builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 // {
 //     var configString = builder.Configuration.GetConnectionString("Redis");
