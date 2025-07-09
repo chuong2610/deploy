@@ -87,7 +87,7 @@ namespace backend.Controllers
             }
         }
         [HttpGet("admin/{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize]
         public async Task<IActionResult> GetNotificationDetailAdminDTO(int id)
         {
             try
