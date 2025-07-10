@@ -26,7 +26,11 @@ public class OtherCheckRepository : IOtherCheckRepository
 
     public async Task<PageResult<OtherCheck>> GetOtherChecksByParentIdAsync(int parentId, int pageNumber, int pageSize, string? search, DateTime? searchDate)
     {
-        var query = _context.OtherChecks.Include(oc => oc.Student).Include(oc => oc.Nurse).Include(oc => oc.CheckList).AsQueryable();
+        var query = _context.OtherChecks.Include(oc => oc.Student)
+                                        .Include(oc => oc.Nurse)
+                                        .Include(oc => oc.CheckList)
+                                        .Where(oc => oc.Student.ParentId == parentId)
+                                        .AsQueryable();
 
         if (search != null)
         {
