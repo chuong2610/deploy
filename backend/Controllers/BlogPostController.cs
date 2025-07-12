@@ -20,7 +20,6 @@ namespace backend.Controllers
 
         // GET: api/BlogPosts
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
         {
             var result = await _blogPostService.GetAllAsync(pageNumber, pageSize);
