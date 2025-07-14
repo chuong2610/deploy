@@ -72,7 +72,7 @@ namespace backend.Controllers
         }
 
         [HttpGet("export-form-result/{id}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize]
         public async Task<IActionResult> ExportFormResult(int id)
         {
             try
@@ -103,7 +103,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("import-result/{notificationId}")]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize]
         public async Task<IActionResult> ImportResult(IFormFile file, int notificationId)
         {
             if (file == null || file.Length == 0)
