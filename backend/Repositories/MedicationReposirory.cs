@@ -421,7 +421,7 @@ namespace backend.Repositories
             var tomorrowStartUtc = TimeZoneInfo.ConvertTimeToUtc(tomorrow, vnTimeZone);
 
             var pendingCount = await _context.Medications
-                .CountAsync(m => m.Status == "Pending" && m.Date < todayStartUtc);
+                .CountAsync(m => m.Status == "Pending" && m.Date <= todayStartUtc);
 
             var activeCount = await _context.Medications
                 .CountAsync(m => m.Status == "Active");
