@@ -432,7 +432,7 @@ namespace backend.Repositories
             var inTodayCount = await _context.Medications
                 .CountAsync(m => m.Status == "Pending"
                                 && m.Date >= todayStartUtc
-                                && m.Date < tomorrowStartUtc);
+                                && m.Date <= tomorrowStartUtc);
 
             return new MedicationCountDTO
             {
