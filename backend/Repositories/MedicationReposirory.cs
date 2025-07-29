@@ -413,15 +413,26 @@ namespace backend.Repositories
 
         public async Task<MedicationCountDTO> GetMedicationCountsAsync()
         {
-            var today = DateTime.UtcNow.Date;
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone).Date;
             var tomorrow = today.AddDays(1);
 
-            var pendingCount = await _context.Medications.CountAsync(m => m.Status == "Pending" && m.Date < today);
-            var activeCount = await _context.Medications.CountAsync(m => m.Status == "Active");
-            var completedCount = await _context.Medications.CountAsync(m => m.Status == "Completed");
-            var inTodayCount = await _context.Medications.CountAsync(m => m.Status == "Pending"
-                                                                        && m.Date >= today
-                                                                       && m.Date < tomorrow);
+            var todayStartUtc = TimeZoneInfo.ConvertTimeToUtc(today, vnTimeZone);
+            var tomorrowStartUtc = TimeZoneInfo.ConvertTimeToUtc(tomorrow, vnTimeZone);
+
+            var pendingCount = await _context.Medications
+                .CountAsync(m => m.Status == "Pending" && m.Date < todayStartUtc);
+
+            var activeCount = await _context.Medications
+                .CountAsync(m => m.Status == "Active");
+
+            var completedCount = await _context.Medications
+                .CountAsync(m => m.Status == "Completed");
+
+            var inTodayCount = await _context.Medications
+                .CountAsync(m => m.Status == "Pending"
+                                && m.Date >= todayStartUtc
+                                && m.Date < tomorrowStartUtc);
 
             return new MedicationCountDTO
             {
